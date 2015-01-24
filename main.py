@@ -1,4 +1,6 @@
- # real_paint.py
+# main.py
+# Dilpreet Chana
+
 
 from pygame import *
 from random import *
@@ -45,6 +47,7 @@ colour_area = Rect(10, 650, 200, 200)
 tab_rect = Rect(0, 0, 383, 80)
 new_layer = Rect(1151, 645, 60, 60)
 delete_layer = Rect(1151, 715, 60, 60)
+layer_area = Rect(383, 645, 758, 240)  # height of each layer rep is 110 and width is 165, max 8 layers
 
 canvas = screen.subsurface(can_rect)
 tool_area = screen.subsurface(tool_area_rect)
@@ -69,6 +72,7 @@ been = []
 checked = []
 tabs = []
 effect_rects = []
+layer_spots = []
 layers = [screen.subsurface(can_rect)]  # holds all layers added by user
 
 # image lists
@@ -116,6 +120,10 @@ for i in range(3):
 # create tab Rects
 for i in range(4):
     tabs.append(Rect(10+70*i,10,60,60))
+
+for x in range(0, 928, 170):
+    for y in range(0, 120, 115):
+        layer_spots.append((x,y))
 
 screen.blit(tool_images[7], (180, 545))
 screen.blit(tool_images[14], (125, 545))
@@ -252,7 +260,10 @@ while running:
 
         
 
-    if tool_area_rect.collidepoint((mx,my)) or tab_rect.collidepoint((mx,my)):
+    if can_rect.collidepoint((mx,my)) == False:  # things to do off of the canvas
+        for i in range(len(layers)-1):
+            layer_area.blit(layers[i], layer_spots[i])
+
         #--------------display tabs----------------------------------
         if selected_tab == "basic tools":
             draw.rect(screen, (0, 255, 0), tabs[0])
