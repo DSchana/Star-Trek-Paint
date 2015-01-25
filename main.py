@@ -18,7 +18,6 @@ TODO:
 * greyscale near colour palette
 * crop
 * layers
-* text tool
 '''
 
 screen = display.set_mode((1280, 900))
@@ -45,9 +44,9 @@ clear_rect = Rect(175, 540, 45, 45)
 music_rect = Rect(175, 595, 45, 45)
 colour_area = Rect(10, 650, 200, 200)
 tab_rect = Rect(0, 0, 383, 80)
-new_layer = Rect(1151, 645, 60, 60)
-delete_layer = Rect(1151, 715, 60, 60)
-layer_area = Rect(383, 645, 758, 240)  # height of each layer rep is 110 and width is 165, max 8 layers
+#new_layer = Rect(1151, 645, 60, 60)
+#delete_layer = Rect(1151, 715, 60, 60)
+#layer_area = Rect(383, 645, 758, 240)  # height of each layer rep is 110 and width is 165, max 8 layers
 
 canvas = screen.subsurface(can_rect)
 tool_area = screen.subsurface(tool_area_rect)
@@ -57,13 +56,16 @@ draw.rect(screen, (214, 182, 54), undo_rect)
 draw.rect(screen, (214, 182, 54), redo_rect)
 draw.rect(screen, (214, 182, 54), clear_rect)
 draw.rect(screen, (214, 182, 54), music_rect)
-draw.rect(screen, (214, 182, 54), new_layer)
-draw.rect(screen, (214, 182, 54), delete_layer)
+#draw.rect(screen, (214, 182, 54), new_layer)
+#draw.rect(screen, (214, 182, 54), delete_layer)
+
+# font stuff
+display_font = font.SysFont("kaiti", 12)
 
 clock = time.Clock()
 
 # lists
-tools = ["pencil","eraser","brush","spray","fill","polygon","line","square","rectangle","circle","ellipse","eye drop", "select"]
+tools = ["pencil","eraser","brush","spray","fill","polygon","line","square","rectangle","circle","ellipse","eye drop", "text"]
 undo = []
 redo = []
 tool_rect = []
@@ -88,6 +90,11 @@ tool_images = [image.load("tool icon/pencil icon.png"), image.load("tool icon/er
 			   image.load("tool icon/cut icon.png"), image.load("tool icon/load icon.png"), image.load("tool icon/save icon.png"), image.load("tool icon/text icon.png"), 
 			   image.load("tool icon/tool tab icon.png"), image.load("tool icon/stamp tab icon.png"), image.load("tool icon/undo icon.png"), image.load("tool icon/redo icon.png")]
 
+# tool descriptions
+description = ["Pencil: Draw stuff", "Eraser: Blast away you mistakes", "Brush: Draw thicker stuff", "Spray: Spray can tool", "Fill: Fill closed areas", 
+			   "Polygon: Connect points into a polygon", "Line: Draw straight lines", "Square: Draw squares", "Rectangle: Draw rectangles", "Circle: Draw circles", 
+			   "Ellipse: Draw oval shapes", "Eye Drop: Select any colour from the canvas", "Text: Type stuff on the canvas"]
+
 for i in range(len(symbols)-1):
     transform.scale(symbols[i],(70,100))
 
@@ -105,7 +112,9 @@ selected_tab = "basic tools"
 music = True
 stamp = "command"
 stamp_num = 0
-current_layer = layers[0]
+text = ""
+typing = False
+#current_layer = layers[0]
 #star_trek_font = font.SysFont("Comic Sans MS",20)
 
 # create tool Rects
@@ -115,7 +124,7 @@ for i in range(5):
 
 # create effect Rects
 for i in range(3):
-    effect_rects.append(Rect(10, 70 * i, 150, 80))
+    effect_rects.append(Rect(10, 70 * i, 150, 80)),
 
 # create tab Rects
 for i in range(4):
@@ -180,6 +189,22 @@ while running:
                 music = True
                 mixer.music.play(-1,0.0)
                 draw.rect(screen, (214, 182, 54), music_rect)
+
+        if tool == "text":
+            if e.type == MOUSEBUTTONDOWN and e.button == 1 and can_rect.collidepoint((mx,my)):
+                canvas_text = canvas.copy()
+                text_pos = (can_x, can_y)
+                typing = True
+            if typing:
+                if e.type == KEYDOWN:
+                    if e.key == K_BACKSPACE:
+                        text = text[:-1]
+                    elif e.key == K_RETURN:
+                        typing = False
+                    elif  e.unicode:
+                        text += e.unicode
+            elif typing == False:
+                text = ""
                 
         # Limit brush size to a range of 5-100
         if brush_size < 5:
@@ -196,6 +221,8 @@ while running:
     tool_area_y = my-80
 
     mb = mouse.get_pressed()
+
+    texttool_font = font.SysFont("kaiti", int(brush_size))
 
     #--------------do stuff--------------------------------------
     if can_rect.collidepoint((mx,my)):
@@ -236,6 +263,11 @@ while running:
 	    if mb[0] == 1 and tool == "eye drop":
 	        brush_colour = eyeDrop(canvas, can_x, can_y)
 
+	    if tool == "text" and typing:
+	        typing_text_pic = texttool_font.render(text, True, brush_colour)
+	        canvas.blit(canvas_text,(0,0))
+	        canvas.blit(typing_text_pic, text_pos)
+
 	    '''
 	    if tool == "select":
 	    	if mb[0] == 1 and copied == False:
@@ -261,8 +293,11 @@ while running:
         
 
     if can_rect.collidepoint((mx,my)) == False:  # things to do off of the canvas
-        for i in range(len(layers)-1):
-            layer_area.blit(layers[i], layer_spots[i])
+        #for i in range(len(layers)-1):
+         #   layer_area.blit(layers[i], layer_spots[i])
+
+        #--------------display selected item-------------------------
+        screen.blit(display_font.render(description[tools.index(tool)], True, (214, 182, 54)) (383, 10))
 
         #--------------display tabs----------------------------------
         if selected_tab == "basic tools":
@@ -342,7 +377,7 @@ while running:
             else:
                 draw.rect(tool_area, (214, 182, 54), tool_rect[11])
 
-            if tool == "select":
+            if tool == "text":
             	draw.rect(tool_area, (0, 255, 0), tool_rect[12])
             else:
             	draw.rect(tool_area, (214, 182, 54), tool_rect[12])
@@ -362,6 +397,7 @@ while running:
             tool_area.blit(tool_images[4], (86, 74))
             tool_area.blit(tool_images[5], (156, 74))
             tool_area.blit(tool_images[6], (156, 215))
+            tool_area.blit(tool_images[11], (16, 285))
 
             draw.line(tool_area, (0, 0, 0), (16, 145), (64, 193), 2)
             draw.rect(tool_area, (0, 0, 0), (86, 145, 48, 48))
