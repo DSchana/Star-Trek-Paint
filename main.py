@@ -1,11 +1,13 @@
 # main.py
 # Dilpreet Chana
 
-
 from pygame import *
 from random import *
 from math import *
 from tools import *
+from tkinter import *
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfilename
 init()
 
 '''
@@ -31,36 +33,48 @@ star_trek_logo = transform.smoothscale(star_trek_logo,(218,100))
 screen.fill((0, 0, 0))
 
 screen.blit(colour_palette, (10, 650))
-screen.blit(star_trek_logo,(683,5))
+screen.blit(star_trek_logo,(900,5))
 
 mixer.music.load("Star Trek.mp3")
-mixer.music.play(-2,0.0)
+mixer.music.play(-1,0.0)
 
-can_rect = Rect(383, 80, 828, 550)
-tool_area_rect = Rect(0, 80, 383, 390)
-undo_rect = Rect(120, 540, 45, 45)
-redo_rect = Rect(120, 595, 45, 45)
-clear_rect = Rect(175, 540, 45, 45)
-music_rect = Rect(175, 595, 45, 45)
-colour_area = Rect(10, 650, 200, 200)
-tab_rect = Rect(0, 0, 383, 80)
+root = Tk()
+root.withdraw()
+
+#--------------create Rects---------------------------
+can_rect = Rect(383, 80, 828, 550)  # canvas Rect
+tool_area_rect = Rect(0, 80, 383, 390)  # Rect of area of selectable tools
+music_rect = Rect(175, 595, 45, 45)  # music pause/play button Rect
+colour_area = Rect(10, 650, 200, 200)  # Rect of area of colour palette
+tab_rect = Rect(0, 0, 383, 80)  # Rect of area of tabs
+discrip_rect = Rect(383, 0, 517, 80)  # Rect for area with tool discriptions
+undo_rect = Rect(120, 540, 45, 45)  # undo button Rect
+redo_rect = Rect(120, 595, 45, 45)  # redo button Rect
+clear_rect = Rect(175, 540, 45, 45)  # clear button Rect
+save_rect = Rect(1216, 80, 60, 60)  # save button Rect
+load_rect = Rect(1216, 150, 60, 60)  # load button Rect
 #new_layer = Rect(1151, 645, 60, 60)
 #delete_layer = Rect(1151, 715, 60, 60)
 #layer_area = Rect(383, 645, 758, 240)  # height of each layer rep is 110 and width is 165, max 8 layers
 
 canvas = screen.subsurface(can_rect)
 tool_area = screen.subsurface(tool_area_rect)
+discrip_area = screen.subsurface(discrip_rect)
+
 canvas.fill((255, 255, 255))
 
+# draw visual representation of buttons
 draw.rect(screen, (214, 182, 54), undo_rect)
 draw.rect(screen, (214, 182, 54), redo_rect)
 draw.rect(screen, (214, 182, 54), clear_rect)
 draw.rect(screen, (214, 182, 54), music_rect)
+draw.rect(screen, (214, 182, 54), save_rect)
+draw.rect(screen, (214, 182, 54), load_rect)
 #draw.rect(screen, (214, 182, 54), new_layer)
 #draw.rect(screen, (214, 182, 54), delete_layer)
 
 # font stuff
-display_font = font.SysFont("kaiti", 12)
+display_font = font.SysFont("kaiti", 20)
 
 clock = time.Clock()
 
@@ -86,14 +100,14 @@ stamp_display = [image.load("Symbols/command insigna.png"),image.load("Symbols/m
                 image.load("Starship/starship 2.png"),image.load("Starship/starship 3.png")]
 
 tool_images = [image.load("tool icon/pencil icon.png"), image.load("tool icon/eraser icon.png"), image.load("tool icon/brush icon.png"), image.load("tool icon/spray icon.png"),
-			   image.load("tool icon/fill icon.png"), image.load("tool icon/polygon icon.png"), image.load("tool icon/eye drop icon.png"), image.load("tool icon/clear icon.png"),
-			   image.load("tool icon/cut icon.png"), image.load("tool icon/load icon.png"), image.load("tool icon/save icon.png"), image.load("tool icon/text icon.png"), 
-			   image.load("tool icon/tool tab icon.png"), image.load("tool icon/stamp tab icon.png"), image.load("tool icon/undo icon.png"), image.load("tool icon/redo icon.png")]
+               image.load("tool icon/fill icon.png"), image.load("tool icon/polygon icon.png"), image.load("tool icon/eye drop icon.png"), image.load("tool icon/clear icon.png"),
+               image.load("tool icon/cut icon.png"), image.load("tool icon/load icon.png"), image.load("tool icon/save icon.png"), image.load("tool icon/text icon.png"), 
+               image.load("tool icon/tool tab icon.png"), image.load("tool icon/stamp tab icon.png"), image.load("tool icon/undo icon.png"), image.load("tool icon/redo icon.png")]
 
 # tool descriptions
-description = ["Pencil: Draw stuff", "Eraser: Blast away you mistakes", "Brush: Draw thicker stuff", "Spray: Spray can tool", "Fill: Fill closed areas", 
-			   "Polygon: Connect points into a polygon", "Line: Draw straight lines", "Square: Draw squares", "Rectangle: Draw rectangles", "Circle: Draw circles", 
-			   "Ellipse: Draw oval shapes", "Eye Drop: Select any colour from the canvas", "Text: Type stuff on the canvas"]
+description = ["Pencil: Take notes on any new planets", "Eraser: Blast away your mistakes", "Brush: Paint with a brush", "Spray: Spray can tool", "Fill: Click to fill closed areas", 
+               "Polygon: Right click to draw points, left to connect", "Line: Draw straight lines", "Square: Drag to draw squares", "Rectangle: Drag to draw rectangles",
+               "Circle: Drag to draw circles", "Ellipse: Draw oval shapes", "Eye Drop: Select any colour from the canvas", "Text: Click to start typing, press enter when done"]
 
 for i in range(len(symbols)-1):
     transform.scale(symbols[i],(70,100))
@@ -151,9 +165,10 @@ while running:
             undo.append(copy)
 
             if e.button == 4 and selected_tab == "basic tools":
-                brush_size += 0.7
+                brush_size += 1  # increase brush size when user scrolls up
+
             if e.button == 5 and selected_tab == "basic tools":
-                brush_size -= 0.7
+                brush_size -= 1  # increase brush size when user scrolls up
 
             #-------------Tools with MOUSEDOWN---------------------------
             if can_rect.collidepoint((mx,my)) and tool == "polygon" and e.button == 1:
@@ -190,6 +205,18 @@ while running:
                 mixer.music.play(-1,0.0)
                 draw.rect(screen, (214, 182, 54), music_rect)
 
+            #----------------save annd load-----------------------------
+            if save_rect.collidepoint((mx,my)) and e.button == 1:
+            	fileName = asksaveasfilename(parent=root,title="Save the image as...")
+            	if fileName[len(fileName)-1:len(fileName)-5:-1] != ".png" or fileName[len(fileName)-1:len(fileName)-5:-1] != ".jpg":  # Check if file has propor extension
+            		fileName += ".png"
+            	image.save(canvas, fileName)
+
+            if load_rect.collidepoint((mx,my)) and e.button == 1:
+            	fileName = askopenfilename(parent=root,title="Open Image:")
+            	screen.blit(image.load(fileName), (can_off_x, can_off_y))
+
+
         if tool == "text":
             if e.type == MOUSEBUTTONDOWN and e.button == 1 and can_rect.collidepoint((mx,my)):
                 canvas_text = canvas.copy()
@@ -207,9 +234,9 @@ while running:
                 text = ""
                 
         # Limit brush size to a range of 5-100
-        if brush_size < 5:
+        if brush_size <= 5:
             brush_size = 5
-        if brush_size>100:
+        if brush_size >= 100:
             brush_size = 100
             
     mx,my = mouse.get_pos()
@@ -224,60 +251,67 @@ while running:
 
     texttool_font = font.SysFont("kaiti", int(brush_size))
 
+    # display brush size and tool information
+    discrip_area.fill((0, 0, 0))
+    display_size = display_font.render(str(int(brush_size)), True, (214, 182, 54))
+    display_text = display_font.render(description[tools.index(tool)], True, (214, 182, 54))
+    discrip_area.blit(display_text, (0, 40))
+    discrip_area.blit(display_size, (0, 20))
+
     #--------------do stuff--------------------------------------
     if can_rect.collidepoint((mx,my)):
-	    if mb[0] == 1 and tool == "pencil":
-	        pencil(screen, canvas, old_pos, can_x, can_y, brush_colour)
+        if mb[0] == 1 and tool == "pencil":
+            pencil(screen, canvas, old_pos, can_x, can_y, brush_colour)
 
-	    if mb[0] == 1 and tool == "eraser":
-	        eraser(screen, canvas, old_pos, can_x, can_y, brush_size)
+        if mb[0] == 1 and tool == "eraser":
+            eraser(screen, canvas, old_pos, can_x, can_y, brush_size)
 
-	    if mb[0] == 1 and tool == "brush":
-	        brush(screen, canvas, old_pos, can_x, can_y, brush_size, brush_colour)
+        if mb[0] == 1 and tool == "brush":
+            brush(screen, canvas, old_pos, can_x, can_y, brush_size, brush_colour)
 
-	    if mb[0] == 1 and tool == "spray":
-	        spray(canvas, can_x, can_y, brush_size, brush_colour)
+        if mb[0] == 1 and tool == "spray":
+            spray(canvas, can_x, can_y, brush_size, brush_colour)
 
-	    if mb[0] == 1 and tool == "fill":
-	        flood_fill(screen, canvas, can_rect, mouse.get_pos(), mx, my, brush_size, brush_colour)
+        if mb[0] == 1 and tool == "fill":
+            flood_fill(screen, canvas, can_rect, mouse.get_pos(), mx, my, brush_size, brush_colour)
 
-	    if mb[2] == 1 and tool == "polygon":
-	        polygonShape(canvas, been, brush_size, brush_colour)
-	        been = []
+        if mb[2] == 1 and tool == "polygon":
+            polygonShape(canvas, been, brush_size, brush_colour)
+            been = []
 
-	    if mb[0] == 1 and tool == "line":
-	        line(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, can_x, can_y, brush_size, brush_colour)
+        if mb[0] == 1 and tool == "line":
+            line(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, can_x, can_y, brush_size, brush_colour)
 
-	    if mb[0] == 1 and tool == "square":
-	        square(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
+        if mb[0] == 1 and tool == "square":
+            square(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
 
-	    if mb[0] == 1 and tool == "rectangle":
-	        rectangle(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
+        if mb[0] == 1 and tool == "rectangle":
+            rectangle(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
 
-	    if mb[0] == 1 and tool == "circle":
-	        circle(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
+        if mb[0] == 1 and tool == "circle":
+            circle(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
 
-	    if mb[0] == 1 and tool == "ellipse":
-	        ellipse(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
+        if mb[0] == 1 and tool == "ellipse":
+            ellipse(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, brush_size, brush_colour, filled)
 
-	    if mb[0] == 1 and tool == "eye drop":
-	        brush_colour = eyeDrop(canvas, can_x, can_y)
+        if mb[0] == 1 and tool == "eye drop":
+            brush_colour = eyeDrop(canvas, can_x, can_y)
 
-	    if tool == "text" and typing:
-	        typing_text_pic = texttool_font.render(text, True, brush_colour)
-	        canvas.blit(canvas_text,(0,0))
-	        canvas.blit(typing_text_pic, text_pos)
+        if tool == "text" and typing:
+            typing_text_pic = texttool_font.render(text, True, brush_colour)
+            canvas.blit(canvas_text,(0,0))
+            canvas.blit(typing_text_pic, text_pos)
 
-	    '''
-	    if tool == "select":
-	    	if mb[0] == 1 and copied == False:
-	    		selected_copy = selectCopy(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, mb, brush_size, brush_colour)
-	    	if 1 not in mb and copied == False:
-	    		copied = True
-	    '''
+        '''
+        if tool == "select":
+            if mb[0] == 1 and copied == False:
+                selected_copy = selectCopy(screen, canvas, copy, can_off_x, can_off_y, init_x, init_y, mx, my, mb, brush_size, brush_colour)
+            if 1 not in mb and copied == False:
+                copied = True
+        '''
 
-	    if 1 not in mb:
-	        old_pos = []
+        if 1 not in mb:
+            old_pos = []
 
     #--------------------display stamps-------------------------------------------------
     if selected_tab == "stamps":
@@ -293,11 +327,6 @@ while running:
         
 
     if can_rect.collidepoint((mx,my)) == False:  # things to do off of the canvas
-        #for i in range(len(layers)-1):
-         #   layer_area.blit(layers[i], layer_spots[i])
-
-        #--------------display selected item-------------------------
-        screen.blit(display_font.render(description[tools.index(tool)], True, (214, 182, 54)) (383, 10))
 
         #--------------display tabs----------------------------------
         if selected_tab == "basic tools":
@@ -378,9 +407,9 @@ while running:
                 draw.rect(tool_area, (214, 182, 54), tool_rect[11])
 
             if tool == "text":
-            	draw.rect(tool_area, (0, 255, 0), tool_rect[12])
+                draw.rect(tool_area, (0, 255, 0), tool_rect[12])
             else:
-            	draw.rect(tool_area, (214, 182, 54), tool_rect[12])
+                draw.rect(tool_area, (214, 182, 54), tool_rect[12])
 
             if filled == False:
                 draw.rect(tool_area, (214, 182, 54), tool_rect[13])
@@ -398,6 +427,9 @@ while running:
             tool_area.blit(tool_images[5], (156, 74))
             tool_area.blit(tool_images[6], (156, 215))
             tool_area.blit(tool_images[11], (16, 285))
+
+            screen.blit(tool_images[10], (1221, 85))
+            screen.blit(tool_images[9], (1221, 155))
 
             draw.line(tool_area, (0, 0, 0), (16, 145), (64, 193), 2)
             draw.rect(tool_area, (0, 0, 0), (86, 145, 48, 48))
@@ -423,11 +455,6 @@ while running:
                 draw.rect(tool_area, (0, 255, 0), effect_rects[2])
             else:
                 draw.rect(tool_area, (214, 182, 54), effect_rects[2])
-
-
-        #--------------------display status-------------------------------------------------
-     #   disp_tool = star_trek_font.render(tool, True, (214, 182, 54))
-     #   screen.blit(disp_tool,(10,430))
 
 
         #-------------------tool change-----------------------------------------------------
@@ -457,7 +484,7 @@ while running:
             if tool_rect[11].collidepoint((tool_area_x, tool_area_y)):
                 tool = tools[11]
             if tool_rect[12].collidepoint((tool_area_x, tool_area_y)):
-            	tool = tools[12]               
+                tool = tools[12]               
             if tool_rect[13].collidepoint((tool_area_x, tool_area_y)):
                 filled = True
             if tool_rect[14].collidepoint((tool_area_x, tool_area_y)):
