@@ -19,7 +19,6 @@ TODO:
 * greyshift
 * greyscale near colour palette
 * crop
-* layers
 '''
 
 screen = display.set_mode((1280, 900))
@@ -57,6 +56,14 @@ load_rect = Rect(1216, 150, 60, 60)  # load button Rect
 #delete_layer = Rect(1151, 715, 60, 60)
 #layer_area = Rect(383, 645, 758, 240)  # height of each layer rep is 110 and width is 165, max 8 layers
 
+# list of images to be on the background
+back_images = [transform.scale(image.load("cap kirk back.png"), (280, 500)), transform.scale(image.load("spock_back.png"), (209, 270))]
+# 209, 270
+
+# display backround images
+screen.blit(back_images[0], (160, 10))
+screen.blit(back_images[1], (1071, 630))
+
 canvas = screen.subsurface(can_rect)
 tool_area = screen.subsurface(tool_area_rect)
 discrip_area = screen.subsurface(discrip_rect)
@@ -80,7 +87,7 @@ clock = time.Clock()
 
 # lists
 tools = ["pencil","eraser","brush","spray","fill","polygon","line","square","rectangle","circle","ellipse","eye drop", "text"]
-undo = []
+undo = [canvas.copy()]
 redo = []
 tool_rect = []
 old_pos = []
@@ -109,6 +116,7 @@ description = ["Pencil: Take notes on any new planets", "Eraser: Blast away your
                "Polygon: Right click to draw points, left to connect", "Line: Draw straight lines", "Square: Drag to draw squares", "Rectangle: Drag to draw rectangles",
                "Circle: Drag to draw circles", "Ellipse: Draw oval shapes", "Eye Drop: Select any colour from the canvas", "Text: Click to start typing, press enter when done"]
 
+
 for i in range(len(symbols)-1):
     transform.scale(symbols[i],(70,100))
 
@@ -128,6 +136,7 @@ stamp = "command"
 stamp_num = 0
 text = ""
 typing = False
+effect = "blur"
 #current_layer = layers[0]
 #star_trek_font = font.SysFont("Comic Sans MS",20)
 
@@ -138,11 +147,11 @@ for i in range(5):
 
 # create effect Rects
 for i in range(3):
-    effect_rects.append(Rect(10, 70 * i, 150, 80)),
+    effect_rects.append(Rect(10, 90 * i, 150, 80)),
 
 # create tab Rects
 for i in range(4):
-    tabs.append(Rect(10+70*i,10,60,60))
+    tabs.append(Rect(10+70*i, 10, 60, 60))
 
 for x in range(0, 928, 170):
     for y in range(0, 120, 115):
@@ -160,9 +169,10 @@ while running:
         if e.type == QUIT:
             running = False
         if e.type == MOUSEBUTTONDOWN:
-            copy = canvas.copy()
             init_x,init_y = mouse.get_pos()
-            undo.append(copy)
+
+            if can_rect.collidepoint((mx,my)):
+                redo = []
 
             if e.button == 4 and selected_tab == "basic tools":
                 brush_size += 1  # increase brush size when user scrolls up
@@ -186,14 +196,22 @@ while running:
             #-----------------------undo, redo, clear-------------------------------------
             if clear_rect.collidepoint((mx,my)):
                 canvas.fill((255,255,255))
+
             if undo_rect.collidepoint((mx,my)) and len(undo_rect) > 1:
-                screen.blit(undo[len(undo)-1],(can_off_x,can_off_y))
-                redo.append(undo[len(undo)-1])
-                del undo[len(undo)-1]
+                try:
+                    screen.blit(undo[-2],(can_off_x,can_off_y))
+                    redo.append(undo[-1])
+                    del undo[-1]
+                except Exception:
+                    pass
+
             if redo_rect.collidepoint((mx,my)) and len(redo_rect) > 0:
-                screen.blit(redo[len(redo)-1],(can_off_x,can_off_y))
-                undo.append(redo[len(redo)-1])
-                del redo[len(redo)-1]
+                try:
+                    screen.blit(redo[-1],(can_off_x,can_off_y))
+                    undo.append(redo[-1])
+                    del redo[-1]
+                except Exception:
+                    pass
 
             #--------------toggle music----------------------------------
             if music and music_rect.collidepoint((mx,my)):
@@ -207,14 +225,18 @@ while running:
 
             #----------------save annd load-----------------------------
             if save_rect.collidepoint((mx,my)) and e.button == 1:
-            	fileName = asksaveasfilename(parent=root,title="Save the image as...")
-            	if fileName[len(fileName)-1:len(fileName)-5:-1] != ".png" or fileName[len(fileName)-1:len(fileName)-5:-1] != ".jpg":  # Check if file has propor extension
-            		fileName += ".png"
-            	image.save(canvas, fileName)
+                fileName = asksaveasfilename(parent=root,title="Save the image as...")
+                if fileName[len(fileName)-1:len(fileName)-5:-1] != ".png" or fileName[len(fileName)-1:len(fileName)-5:-1] != ".jpg":  # Check if file has propor extension
+                    fileName += ".png"
+                image.save(canvas, fileName)
 
             if load_rect.collidepoint((mx,my)) and e.button == 1:
-            	fileName = askopenfilename(parent=root,title="Open Image:")
-            	screen.blit(image.load(fileName), (can_off_x, can_off_y))
+                fileName = askopenfilename(parent=root,title="Open Image:")
+                screen.blit(image.load(fileName), (can_off_x, can_off_y))
+
+        if e.type == MOUSEBUTTONUP and can_rect.collidepoint((mx,my)):
+            copy = canvas.copy()
+            undo.append(copy)
 
 
         if tool == "text":
