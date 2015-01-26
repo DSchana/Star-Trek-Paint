@@ -42,7 +42,7 @@ root.withdraw()
 
 #--------------create Rects---------------------------
 can_rect = Rect(383, 80, 828, 550)  # canvas Rect
-tool_area_rect = Rect(0, 80, 383, 390)  # Rect of area of selectable tools
+tool_area_rect = Rect(0, 80, 220, 390)  # Rect of area of selectable tools
 music_rect = Rect(175, 595, 45, 45)  # music pause/play button Rect
 colour_area = Rect(10, 650, 200, 200)  # Rect of area of colour palette
 tab_rect = Rect(0, 0, 383, 80)  # Rect of area of tabs
@@ -57,12 +57,13 @@ load_rect = Rect(1216, 150, 60, 60)  # load button Rect
 #layer_area = Rect(383, 645, 758, 240)  # height of each layer rep is 110 and width is 165, max 8 layers
 
 # list of images to be on the background
-back_images = [transform.scale(image.load("cap kirk back.png"), (280, 500)), transform.scale(image.load("spock_back.png"), (209, 270))]
+back_images = [transform.scale(image.load("cap kirk back.png"), (280, 500)), transform.scale(image.load("spock_back.png"), (209, 270)), transform.scale(image.load("starship back.png"), (366, 207))]
 # 209, 270
 
 # display backround images
 screen.blit(back_images[0], (160, 10))
 screen.blit(back_images[1], (1071, 630))
+screen.blit(back_images[2], (383, 630))
 
 canvas = screen.subsurface(can_rect)
 tool_area = screen.subsurface(tool_area_rect)
@@ -137,6 +138,7 @@ stamp_num = 0
 text = ""
 typing = False
 effect = "blur"
+copy = canvas.copy()
 #current_layer = layers[0]
 #star_trek_font = font.SysFont("Comic Sans MS",20)
 
@@ -174,10 +176,10 @@ while running:
             if can_rect.collidepoint((mx,my)):
                 redo = []
 
-            if e.button == 4 and selected_tab == "basic tools":
+            if e.button == 4:
                 brush_size += 1  # increase brush size when user scrolls up
 
-            if e.button == 5 and selected_tab == "basic tools":
+            if e.button == 5:
                 brush_size -= 1  # increase brush size when user scrolls up
 
             #-------------Tools with MOUSEDOWN---------------------------
@@ -185,11 +187,18 @@ while running:
                 been = polygonPoints(canvas, can_x, can_y, brush_size, brush_colour, been)
 
             if e.button == 4 and selected_tab == "stamps":
-                display_image = transform.smoothscale(symbols[stamp_num], (int(symbols[stamp_num].get_width() + brush_size * 5), int(symbols[stamp_num].get_height() + brush_size * 5)))
-                screen.blit(copy, (can_off_x, can_off_y))
+                try:
+                    display_image = transform.scale(symbols[stamp_num], (int(symbols[stamp_num].get_width() + brush_size * 5), int(symbols[stamp_num].get_height() + brush_size * 5)))
+                    screen.blit(copy, (can_off_x, can_off_y))
+                except Exception:
+                    pass
             elif e.button == 5 and selected_tab == "stamps":
-                display_image = transform.smoothscale(symbols[stamp_num], (int(symbols[stamp_num].get_width() - brush_size * 5), int(symbols[stamp_num].get_height() - brush_size * 5)))
-                screen.blit(copy, (can_off_x, can_off_y))
+                try:
+                    display_image = transform.scale(symbols[stamp_num], (int(symbols[stamp_num].get_width() - brush_size * 5), int(symbols[stamp_num].get_height() - brush_size * 5)))
+                    screen.blit(copy, (can_off_x, can_off_y))
+                except Exception:
+                    pass
+
             elif e.button == 1 and selected_tab == "stamps":
                 canvas.blit(display_image,(can_x-display_image.get_width()//2,can_y-display_image.get_height()//2))
 
