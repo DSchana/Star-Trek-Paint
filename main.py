@@ -1,13 +1,13 @@
 # main.py
 # Dilpreet Chana
 
+from tkinter import *
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfilename
 from pygame import *
 from random import *
 from math import *
 from tools import *
-from tkinter import *
-from tkinter.filedialog import askopenfilename
-from tkinter.filedialog import asksaveasfilename
 init()
 
 screen = display.set_mode((1280, 900))
@@ -107,7 +107,7 @@ for i in range(len(symbols)-1):
 
 # Create Rects for images
 symbol_rect = [Rect(10, 10, 70, 100), Rect(90, 10, 70, 100), Rect(10, 120, 70, 100), Rect(90, 120, 70, 100), 
-			   Rect(10, 230, 70, 51), Rect(90, 230, 112, 68), Rect(10, 340, 100, 64), Rect(90, 340, 112, 68)]
+               Rect(10, 230, 70, 51), Rect(90, 230, 112, 68), Rect(10, 340, 100, 64), Rect(90, 340, 112, 68)]
 
 # initialize variables
 tool = tools[0]
@@ -165,21 +165,21 @@ while running:
 
             if e.button == 4 and selected_tab == "stamps":
                 try:
-                	# Increase image size when scroll up
+                    # Increase image size when scroll up
                     display_image = transform.scale(symbols[stamp_num], (int(symbols[stamp_num].get_width() + brush_size * 5), int(symbols[stamp_num].get_height() + brush_size * 5)))
                     screen.blit(copy, (can_off_x, can_off_y))
                 except Exception:
                     pass
             elif e.button == 5 and selected_tab == "stamps":
                 try:
-                	# Decrease image size when scroll down
+                    # Decrease image size when scroll down
                     display_image = transform.scale(symbols[stamp_num], (int(symbols[stamp_num].get_width() - brush_size * 5), int(symbols[stamp_num].get_height() - brush_size * 5)))
                     screen.blit(copy, (can_off_x, can_off_y))
                 except Exception:
                     pass
 
             elif e.button == 1 and selected_tab == "stamps":
-            	# Draw image to canvas when user clicks
+                # Draw image to canvas when user clicks
                 canvas.blit(display_image,(can_x-display_image.get_width()//2,can_y-display_image.get_height()//2))
 
             #-----------------------undo, redo, clear-------------------------------------
@@ -234,9 +234,9 @@ while running:
                 text_pos = (can_x, can_y)
                 typing = True
             if typing:
-            	if e.type == MOUSEBUTTONDOWN:
-            		screen.blit(copy, (can_off_x, can_off_y))
-            	if e.type == KEYDOWN:
+                if e.type == MOUSEBUTTONDOWN:
+                    screen.blit(copy, (can_off_x, can_off_y))
+                if e.type == KEYDOWN:
                     if e.key == K_BACKSPACE:
                         text = text[:-1]
                     elif e.key == K_RETURN:
